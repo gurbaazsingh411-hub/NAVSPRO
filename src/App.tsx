@@ -8,6 +8,7 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import EmailVerified from "./pages/EmailVerified";
+import Admin from "./pages/Admin";
 import Assessment from "./pages/Assessment";
 import Report from "./pages/Report";
 import Dashboard from "./pages/Dashboard";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/email-verified" element={<EmailVerified />} />
+            <Route path="/admin" element={<Admin />} />
 
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>

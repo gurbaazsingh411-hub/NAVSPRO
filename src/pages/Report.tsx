@@ -18,28 +18,53 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { calculateScores, getCareerRecommendations, ScoreResult } from "@/utils/scoringUtils";
-import { Download, ArrowRight, Home } from "lucide-react";
+import { Download, ArrowRight, Home, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Report = () => {
     const navigate = useNavigate();
+    const { user, loading } = useAuth();
     const [result, setResult] = useState<ScoreResult | null>(null);
+    const [isGenerating, setIsGenerating] = useState(true);
 
     useEffect(() => {
-        const savedProgress = localStorage.getItem("navspro_assessment_progress");
-        if (savedProgress) {
-            const { answers } = JSON.parse(savedProgress);
-            if (answers && Object.keys(answers).length > 0) {
-                const scores = calculateScores(answers);
-                setResult(scores);
-            } else {
-                navigate("/assessment");
-            }
-        } else {
-            navigate("/assessment");
-        }
-    }, [navigate]);
+        const generateReport = async () => {
+            if (!user) return;
 
-    if (!result) return <div className="min-h-screen flex items-center justify-center">Generating Report...</div>;
+            try {
+                const { data: progress } = await supabase
+                    .from('assessment_progress')
+                    .select('answers')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (progress?.answers && Object.keys(progress.answers).length > 0) {
+                    const scores = calculateScores(progress.answers);
+                    setResult(scores);
+                } else {
+                    toast.error("No assessment data found. Please complete the assessment first.");
+                    navigate("/assessment");
+                }
+            } catch (error) {
+                console.error("Error generating report:", error);
+                toast.error("Failed to generate report");
+            } finally {
+                setIsGenerating(false);
+            }
+        };
+
+        if (!loading) {
+            generateReport();
+        }
+    }, [user, loading, navigate]);
+
+    if (loading || isGenerating || !result) {
+        return <div className="min-h-screen flex items-center justify-center gap-2">
+            <Loader2 className="animate-spin" /> Generating your personalized report...
+        </div>;
+    }
 
     // Prepare Data for Charts
     const interestData = [
@@ -175,8 +200,8 @@ const Report = () => {
                                         {trait.replace(/_/g, " ").toLowerCase()}
                                     </span>
                                     <span className={`text-xs px-2 py-1 rounded font-semibold ${level === 'High' ? 'bg-purple-100 text-purple-700' :
-                                            level === 'Moderate' ? 'bg-amber-100 text-amber-700' :
-                                                'bg-slate-200 text-slate-600'
+                                        level === 'Moderate' ? 'bg-amber-100 text-amber-700' :
+                                            'bg-slate-200 text-slate-600'
                                         }`}>
                                         {level}
                                     </span>

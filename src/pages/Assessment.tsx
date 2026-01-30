@@ -92,7 +92,7 @@ const Assessment = () => {
                             current_question_index: currentQuestionIndex,
                             answers: answers,
                             updated_at: new Date().toISOString()
-                        });
+                        }, { onConflict: 'user_id' });
                 } catch (error) {
                     console.error("Error saving progress:", error);
                 }
